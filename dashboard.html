@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANPR Control Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+            background: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        /* Header */
+        header {
+            margin-bottom: 48px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #00ff00;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .timestamp-display {
+            font-size: 11px;
+            color: #666;
+            letter-spacing: 0.5px;
+        }
+
+        /* Stats Overview */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1px;
+            background: #0a0a0a;
+            margin-bottom: 48px;
+            border: 1px solid #1a1a1a;
+        }
+
+        .stat-box {
+            background: #000000;
+            padding: 32px 24px;
+            text-align: center;
+            transition: background 0.2s;
+        }
+
+        .stat-box:hover {
+            background: #0a0a0a;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #666;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 48px;
+            font-weight: 200;
+            letter-spacing: -2px;
+            color: #ffffff;
+            line-height: 1;
+        }
+
+        .stat-change {
+            font-size: 11px;
+            color: #666;
+            margin-top: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+
+        /* Panel */
+        .panel {
+            background: #000000;
+            border: 1px solid #1a1a1a;
+            padding: 32px;
+            min-height: 400px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: -0.3px;
+            color: #ffffff;
+        }
+
+        .panel-subtitle {
+            font-size: 11px;
+            color: #666;
+            letter-spacing: 0.5px;
+        }
+
+        /* Live Feed */
+        .detection-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .detection-feed::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .detection-feed::-webkit-scrollbar-track {
+            background: #000000;
+        }
+
+        .detection-feed::-webkit-scrollbar-thumb {
+            background: #1a1a1a;
+        }
+
+        .detection-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 16px;
+            align-items: center;
+            padding: 20px;
+            background: #000000;
+            border-bottom: 1px solid #0a0a0a;
+            transition: background 0.2s;
+        }
+
+        .detection-item:hover {
+            background: #0a0a0a;
+        }
+
+        .direction-indicator {
+            width: 3px;
+            height: 32px;
+            background: #333;
+        }
+
+        .direction-indicator.in {
+            background: #ffffff;
+        }
+
+        .direction-indicator.out {
+            background: #666;
+        }
+
+        .plate-info {
+            flex: 1;
+        }
+
+        .plate-number {
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #ffffff;
+            margin-bottom: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .plate-meta {
+            font-size: 11px;
+            color: #666;
+            display: flex;
+            gap: 12px;
+        }
+
+        .direction-tag {
+            font-size: 10px;
+            padding: 4px 8px;
+            border: 1px solid #1a1a1a;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+        }
+
+        .detection-time {
+            font-size: 11px;
+            color: #666;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* State Analytics */
+        .state-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .state-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 16px;
+            background: #000000;
+            border-bottom: 1px solid #0a0a0a;
+        }
+
+        .state-name {
+            font-size: 13px;
+            font-weight: 400;
+            color: #ffffff;
+            letter-spacing: -0.2px;
+        }
+
+        .state-count {
+            font-size: 20px;
+            font-weight: 200;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
+        .state-bar {
+            height: 2px;
+            background: #1a1a1a;
+            margin-top: 12px;
+            position: relative;
+        }
+
+        .state-bar-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: #ffffff;
+            transition: width 0.3s;
+        }
+
+        /* Vehicle Table */
+        .vehicle-table-container {
+            grid-column: 1 / -1;
+        }
+
+        .search-box {
+            margin-bottom: 24px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 16px 20px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            color: #ffffff;
+            font-size: 13px;
+            letter-spacing: -0.2px;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input::placeholder {
+            color: #666;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #333;
+        }
+
+        .vehicle-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .vehicle-table thead th {
+            text-align: left;
+            padding: 16px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #666;
+            font-weight: 500;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .vehicle-table tbody td {
+            padding: 20px 16px;
+            border-bottom: 1px solid #0a0a0a;
+            font-size: 13px;
+            color: #ffffff;
+        }
+
+        .vehicle-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        .vehicle-table tbody tr:hover {
+            background: #0a0a0a;
+        }
+
+        .table-plate {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            font-weight: 400;
+        }
+
+        .table-state {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid #1a1a1a;
+            color: #666;
+        }
+
+        .status-badge.inside {
+            border-color: #ffffff;
+            color: #ffffff;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 40px 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #000000;
+            border: 1px solid #333;
+            max-width: 900px;
+            width: 100%;
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 32px;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .modal-plate {
+            font-size: 32px;
+            font-weight: 200;
+            letter-spacing: 3px;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 8px;
+        }
+
+        .modal-state {
+            font-size: 13px;
+            color: #666;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-close {
+            background: none;
+            border: 1px solid #333;
+            color: #666;
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            border-color: #ffffff;
+            color: #ffffff;
+        }
+
+        .modal-body {
+            padding: 32px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            margin-bottom: 32px;
+        }
+
+        .detail-box {
+            background: #000000;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .detail-value {
+            font-size: 28px;
+            font-weight: 200;
+            letter-spacing: -1px;
+            color: #ffffff;
+        }
+
+        .detail-subtext {
+            font-size: 11px;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #666;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .activity-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .activity-timeline::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .activity-timeline::-webkit-scrollbar-track {
+            background: #000000;
+        }
+
+        .activity-timeline::-webkit-scrollbar-thumb {
+            background: #1a1a1a;
+        }
+
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #000000;
+            border-bottom: 1px solid #0a0a0a;
+        }
+
+        .activity-direction {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+        }
+
+        .activity-dot.in {
+            background: #ffffff;
+        }
+
+        .activity-text {
+            font-size: 13px;
+            color: #ffffff;
+        }
+
+        .activity-time {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .activity-duration {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .no-activity {
+            text-align: center;
+            padding: 40px;
+            color: #333;
+            font-size: 12px;
+        }
+
+        .table-row-clickable {
+            cursor: pointer;
+        }
+
+        .table-row-clickable:hover {
+            background: #0a0a0a !important;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                margin: 20px;
+            }
+            
+            .detail-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 80px 20px;
+            color: #333;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Quick Stats Bar */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            margin-bottom: 32px;
+        }
+
+        .quick-stat {
+            background: #000000;
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .quick-stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+        }
+
+        .quick-stat-value {
+            font-size: 24px;
+            font-weight: 200;
+            letter-spacing: -1px;
+            color: #ffffff;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-overview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .quick-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1>ANPR Control Center</h1>
+                <div class="system-status">
+                    <span class="status-dot"></span>
+                    <span>SYSTEM ACTIVE</span>
+                </div>
+            </div>
+            <div class="timestamp-display" id="currentTime"></div>
+        </header>
+
+        <div class="stats-overview">
+            <div class="stat-box">
+                <div class="stat-label">Total Detections</div>
+                <div class="stat-value" id="totalDetections">0</div>
+                <div class="stat-change">All time</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Entries Today</div>
+                <div class="stat-value" id="totalEntries">0</div>
+                <div class="stat-change">Inbound</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Exits Today</div>
+                <div class="stat-value" id="totalExits">0</div>
+                <div class="stat-change">Outbound</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Currently Inside</div>
+                <div class="stat-value" id="currentlyInside">0</div>
+                <div class="stat-change">Active</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Unique Vehicles</div>
+                <div class="stat-value" id="uniqueVehicles">0</div>
+                <div class="stat-change">Tracked</div>
+            </div>
+        </div>
+
+        <div class="quick-stats">
+            <div class="quick-stat">
+                <div class="quick-stat-label">Most Active State</div>
+                <div class="quick-stat-value" id="topState">—</div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-label">Peak Hour Today</div>
+                <div class="quick-stat-value" id="peakHour">—</div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-label">Avg. Detections/Hour</div>
+                <div class="quick-stat-value" id="avgDetections">—</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Live Detection Feed</div>
+                        <div class="panel-subtitle">Real-time vehicle monitoring</div>
+                    </div>
+                </div>
+                <div class="detection-feed" id="recentDetections">
+                    <div class="no-data">Awaiting detections...</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">State Distribution</div>
+                        <div class="panel-subtitle">Today's activity by state</div>
+                    </div>
+                </div>
+                <div class="state-list" id="stateAnalytics">
+                    <div class="no-data">No state data available...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel vehicle-table-container">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">Vehicle Registry</div>
+                    <div class="panel-subtitle">Complete tracking database</div>
+                </div>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search by plate number or state...">
+            </div>
+            <div id="vehiclesList">
+                <div class="no-data">No vehicles registered...</div>
+            </div>
+        </div>
+
+        <!-- Vehicle Detail Modal -->
+        <div class="modal-overlay" id="vehicleModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <div class="modal-plate" id="modalPlateNumber">—</div>
+                        <div class="modal-state" id="modalState">—</div>
+                    </div>
+                    <button class="modal-close" onclick="closeModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="detail-grid">
+                        <div class="detail-box">
+                            <div class="detail-label">Total Time Inside</div>
+                            <div class="detail-value" id="modalTotalTime">—</div>
+                            <div class="detail-subtext">All time</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-label">Time Inside Today</div>
+                            <div class="detail-value" id="modalTimeToday">—</div>
+                            <div class="detail-subtext">Current session</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-label">Total Visits</div>
+                            <div class="detail-value" id="modalTotalVisits">—</div>
+                            <div class="detail-subtext">Entry count</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-label">Current Status</div>
+                            <div class="detail-value" id="modalStatus">—</div>
+                            <div class="detail-subtext" id="modalStatusTime">—</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 32px;">
+                        <div class="section-title">Duration Records</div>
+                        <div class="detail-grid" style="grid-template-columns: 1fr 1fr;">
+                            <div class="detail-box">
+                                <div class="detail-label">Longest Stay</div>
+                                <div class="detail-value" style="font-size: 20px;" id="modalLongestDuration">—</div>
+                                <div class="detail-subtext" id="modalLongestDate">—</div>
+                            </div>
+                            <div class="detail-box">
+                                <div class="detail-label">Average Stay</div>
+                                <div class="detail-value" style="font-size: 20px;" id="modalAvgDuration">—</div>
+                                <div class="detail-subtext">Per visit</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="section-title">Recent Activity</div>
+                        <div class="activity-timeline" id="modalActivityTimeline">
+                            <div class="no-activity">Loading activity...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const REFRESH_INTERVAL = 3000;
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = 
+                now.toLocaleString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        async function fetchStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                document.getElementById('totalDetections').textContent = data.total_detections;
+                document.getElementById('totalEntries').textContent = data.total_entries;
+                document.getElementById('totalExits').textContent = data.total_exits;
+                document.getElementById('currentlyInside').textContent = data.currently_inside;
+                document.getElementById('uniqueVehicles').textContent = data.unique_vehicles;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        async function fetchStateAnalytics() {
+            try {
+                const response = await fetch('/api/states/today');
+                const states = await response.json();
+                
+                const container = document.getElementById('stateAnalytics');
+                
+                if (states.length === 0) {
+                    container.innerHTML = '<div class="no-data">No state data available...</div>';
+                    return;
+                }
+
+                // Update top state
+                if (states[0]) {
+                    document.getElementById('topState').textContent = states[0].state_name;
+                }
+
+                const maxCount = Math.max(...states.map(s => s.count));
+                
+                container.innerHTML = states.slice(0, 8).map(state => `
+                    <div class="state-item">
+                        <div>
+                            <div class="state-name">${state.state_name}</div>
+                            <div class="state-bar">
+                                <div class="state-bar-fill" style="width: ${(state.count / maxCount) * 100}%"></div>
+                            </div>
+                        </div>
+                        <div class="state-count">${state.count}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error fetching state analytics:', error);
+            }
+        }
+
+        async function fetchTodayStats() {
+            try {
+                const response = await fetch('/api/today');
+                const data = await response.json();
+                
+                if (data.length > 0) {
+                    const peakHourData = data.reduce((max, curr) => curr.total > max.total ? curr : max);
+                    document.getElementById('peakHour').textContent = `${String(peakHourData.hour).padStart(2, '0')}:00`;
+                    
+                    const totalToday = data.reduce((sum, curr) => sum + curr.total, 0);
+                    const avgPerHour = Math.round(totalToday / data.length);
+                    document.getElementById('avgDetections').textContent = avgPerHour;
+                }
+            } catch (error) {
+                console.error('Error fetching today stats:', error);
+            }
+        }
+
+        async function fetchRecentDetections() {
+            try {
+                const response = await fetch('/api/recent');
+                const detections = await response.json();
+                
+                const container = document.getElementById('recentDetections');
+                
+                if (detections.length === 0) {
+                    container.innerHTML = '<div class="no-data">Awaiting detections...</div>';
+                    return;
+                }
+                
+                container.innerHTML = detections.map(d => `
+                    <div class="detection-item">
+                        <div class="direction-indicator ${d.direction.toLowerCase()}"></div>
+                        <div class="plate-info">
+                            <div class="plate-number">${d.plate_number}</div>
+                            <div class="plate-meta">
+                                <span>${d.state_name || 'Unknown State'}</span>
+                                <span>${Math.round(d.confidence * 100)}% confidence</span>
+                            </div>
+                        </div>
+                        <div class="direction-tag">${d.direction}</div>
+                        <div class="detection-time">${formatTime(d.timestamp)}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error fetching recent detections:', error);
+            }
+        }
+
+        async function fetchVehicles() {
+            try {
+                const response = await fetch('/api/vehicles');
+                const vehicles = await response.json();
+                
+                const container = document.getElementById('vehiclesList');
+                
+                if (vehicles.length === 0) {
+                    container.innerHTML = '<div class="no-data">No vehicles registered...</div>';
+                    return;
+                }
+                
+                container.innerHTML = `
+                    <table class="vehicle-table">
+                        <thead>
+                            <tr>
+                                <th>Plate Number</th>
+                                <th>State</th>
+                                <th>Entries</th>
+                                <th>Exits</th>
+                                <th>Status</th>
+                                <th>Last Seen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${vehicles.map(v => `
+                                <tr class="table-row-clickable" onclick="openModal('${v.plate_number}')">
+                                    <td class="table-plate">${v.plate_number}</td>
+                                    <td class="table-state">${v.state_name || '—'}</td>
+                                    <td>${v.entry_count}</td>
+                                    <td>${v.exit_count}</td>
+                                    <td><span class="status-badge ${v.status.toLowerCase()}">${v.status}</span></td>
+                                    <td>${formatTimestamp(v.last_seen)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                console.error('Error fetching vehicles:', error);
+            }
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.vehicle-table tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        // Modal functions
+        function openModal(plateNumber) {
+            const modal = document.getElementById('vehicleModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            loadVehicleDetails(plateNumber);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('vehicleModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('vehicleModal').addEventListener('click', (e) => {
+            if (e.target.id === 'vehicleModal') {
+                closeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        async function loadVehicleDetails(plateNumber) {
+            try {
+                const response = await fetch(`/api/vehicle/${encodeURIComponent(plateNumber)}`);
+                const data = await response.json();
+                
+                // Update modal header
+                document.getElementById('modalPlateNumber').textContent = plateNumber;
+                document.getElementById('modalState').textContent = data.state_name || 'Unknown State';
+                
+                // Update stats
+                document.getElementById('modalTotalTime').textContent = formatDuration(data.total_time_inside);
+                document.getElementById('modalTimeToday').textContent = formatDuration(data.time_inside_today);
+                document.getElementById('modalTotalVisits').textContent = data.total_visits;
+                document.getElementById('modalStatus').textContent = data.current_status;
+                document.getElementById('modalStatusTime').textContent = data.status_time;
+                
+                // Update records
+                document.getElementById('modalLongestDuration').textContent = formatDuration(data.longest_stay_duration);
+                document.getElementById('modalLongestDate').textContent = data.longest_stay_date || '—';
+                document.getElementById('modalAvgDuration').textContent = formatDuration(data.average_stay_duration);
+                
+                // Update activity timeline
+                const timeline = document.getElementById('modalActivityTimeline');
+                if (data.recent_activity && data.recent_activity.length > 0) {
+                    timeline.innerHTML = data.recent_activity.map(activity => {
+                        const duration = activity.duration ? `<div class="activity-duration">Duration: ${formatDuration(activity.duration)}</div>` : '';
+                        return `
+                            <div class="activity-item">
+                                <div class="activity-direction">
+                                    <div class="activity-dot ${activity.direction.toLowerCase()}"></div>
+                                    <div>
+                                        <div class="activity-text">${activity.direction}</div>
+                                        ${duration}
+                                    </div>
+                                </div>
+                                <div class="activity-time">${formatFullTimestamp(activity.timestamp)}</div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    timeline.innerHTML = '<div class="no-activity">No recent activity</div>';
+                }
+            } catch (error) {
+                console.error('Error loading vehicle details:', error);
+            }
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds || seconds === 0) return '0m';
+            
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            
+            if (hours > 24) {
+                const days = Math.floor(hours / 24);
+                const remainingHours = hours % 24;
+                return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+            } else if (hours > 0) {
+                return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+            } else {
+                return `${minutes}m`;
+            }
+        }
+
+        function formatFullTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        }
+
+        // Initial load
+        fetchStats();
+        fetchStateAnalytics();
+        fetchTodayStats();
+        fetchRecentDetections();
+        fetchVehicles();
+
+        // Auto-refresh
+        setInterval(() => {
+            fetchStats();
+            fetchStateAnalytics();
+            fetchTodayStats();
+            fetchRecentDetections();
+            fetchVehicles();
+        }, REFRESH_INTERVAL);
+    </script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+# Changelog
+
+All notable changes to the Nigerian ANPR System will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.0] - 2026-02-20
+
+###  Initial Release
+
+#### Added
+- **Core Detection Engine**
+  - Real-time plate detection using OpenCV contour analysis
+  - Multi-pass OCR with EasyOCR (3 threshold variants)
+  - Nigerian plate format validation (AAA-000-AA)
+  - Blur detection and frame stabilization
+  - Cooldown protection to prevent duplicate logging
+  
+- **State Recognition System**
+  - Direct OCR of state banner text
+  - Fuzzy text matching for 36 Nigerian states
+  - Auto-zoom feature for enhanced state detection
+  - Smart caching (exact plate and prefix-based)
+  - Automatic state backfilling across matching prefixes
+  
+- **Direction Tracking**
+  - Alternating IN/OUT detection per vehicle
+  - Persistent vehicle status (INSIDE/OUTSIDE)
+  - Entry and exit counters
+  
+- **Database Layer**
+  - SQLite storage with two tables (plate_detections, vehicle_tracking)
+  - Persistent counters across restarts
+  - State cache loading on startup
+  
+- **Web Dashboard**
+  - Minimalistic black & white design
+  - Live stats overview (Total, IN, OUT, Inside, Unique)
+  - Quick analytics bar (Most Active State, Peak Hour, Avg/Hour)
+  - Real-time detection feed (last 20 events)
+  - State distribution bar chart (top 8 states)
+  - Searchable vehicle registry table
+  - Auto-refresh every 3 seconds
+  
+- **Vehicle Analytics Modal**
+  - Total time inside (all-time cumulative)
+  - Time inside today (current session)
+  - Total visits counter
+  - Current status with timestamp
+  - Longest stay with date
+  - Average stay duration
+  - Recent activity timeline with durations
+  
+- **REST API**
+  - `/api/stats` - Aggregate statistics
+  - `/api/recent` - Last 20 detections
+  - `/api/vehicles` - All tracked vehicles
+  - `/api/today` - Hourly breakdown
+  - `/api/states/today` - State distribution
+  - `/api/vehicle/<plate>` - Vehicle analytics
+  - `/api/search/<plate>` - Plate search
+  - `/api/system/status` - System health
+  
+- **Configuration System**
+  - Comprehensive config.py with 40+ tunable parameters
+  - Detection thresholds (blur, stabilization, cooldown)
+  - Plate geometry constraints (aspect ratio, area, size)
+  - OCR settings (confidence threshold, auto-zoom)
+  - Visual overlay colors
+  - False positive filtering options
+  
+- **Launch System**
+  - Unified launcher script (launcher.py)
+  - Automatic browser opening
+  - Threaded web server startup
+  - Clean shutdown handling
+  
+- **Documentation**
+  - Comprehensive README.md
+  - Full technical documentation (Word format)
+  - Contributing guidelines
+  - Installation scripts (Windows batch file)
+  - Requirements.txt with version pinning
+
+#### Technical Details
+- Python 3.9+ support
+- YOLOv8 nano model for object detection
+- EasyOCR 1.7+ for text recognition
+- OpenCV 4.8+ for image processing
+- Flask 3.0+ for web framework
+- SQLite 3 for data persistence
+
+---
+
+## [Unreleased]
+
+### Planned Features
+- Multi-camera support
+- Export reports to PDF/Excel
+- Real-time alerts (email/SMS)
+- Docker containerization
+- Mobile app dashboard
+- Cloud deployment guides
+- User authentication
+- Advanced traffic analytics
+
+---
+
+## Release History
+
+- **v1.0.0** - Initial public release (2026-02-20)
+
+---
+
+**Note**: For older versions or pre-release history, see commit logs in the repository.
